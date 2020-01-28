@@ -15,7 +15,7 @@ import com.discoveri.heartihealth.exceptions.HeartiExceptions;
 import com.discoveri.heartihealth.repository.HeartInfoRepo;
 
 @Repository
-public class HeartInfoInfoRepoImpl  implements HeartInfoRepo{
+public class HeartInfoRepoImpl  implements HeartInfoRepo{
 
 	@Override
 	public  List<IntervalPrediction> weeklyReport() throws HeartiExceptions {

@@ -25,7 +25,7 @@ public class HeartiController {
 	@Autowired
 	private HeartInfoService heartInfoService;
 
-	@RequestMapping(value = "/weeklyReport", method = RequestMethod.GET)
+	@RequestMapping(value = "/api/weeklyReport", method = RequestMethod.GET)
 	public ResponseEntity<List<IntervalPrediction>> weeklyReport() throws SQLException {
 		try {
 			List<IntervalPrediction> weeklypredication = heartInfoService.weeklyReport();
@@ -40,7 +40,7 @@ public class HeartiController {
 		return null;
 	}
 
-	@RequestMapping(value = "/yearlyReport",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/yearlyReport",method = RequestMethod.GET)
 	public ResponseEntity<List<IntervalPrediction>> yearlyReport() throws SQLException {
 		try {
 			List<IntervalPrediction> yearlypredication = heartInfoService.weeklyReport();
@@ -55,7 +55,7 @@ public class HeartiController {
 		return null;
 	}
 
-	@RequestMapping(value = "/intervalReport/{reportType}",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/intervalReport/{reportType}",method = RequestMethod.GET)
 	public ResponseEntity<List<IntervalPrediction>> intervalReport(@PathVariable String reportType)
 			throws SQLException {
 		List<IntervalPrediction> intervalReport = null;
@@ -79,7 +79,7 @@ public class HeartiController {
 		return null;
 	}
 
-	@RequestMapping(value = "/getTotalCardioArrestPrediction/{memberid}",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/getTotalCardioArrestPrediction/{memberid}",method = RequestMethod.GET)
 
 	public ResponseEntity<List<CardioArrestDetection>> getTotalCardioArrestPrediction(@PathVariable String memberid)
 			throws SQLException {
@@ -96,7 +96,7 @@ public class HeartiController {
 		return null;
 	}
 	
-	@RequestMapping(value = "/getTotalCardioArrestPrediction",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/getTotalCardioArrestPrediction",method = RequestMethod.GET)
 
 	public ResponseEntity<List<CardioArrestDetection>> getTotalCardioArrestPrediction()
 			throws SQLException {
@@ -114,7 +114,7 @@ public class HeartiController {
 	}
 	
 	
-	@RequestMapping(value = "/livePredictions/{memberid}",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/livePredictions/{memberid}",method = RequestMethod.GET)
 
 	public ResponseEntity<List<LivePrediction>> getLivePrediction(@PathVariable String memberid)
 			throws SQLException {
@@ -133,7 +133,7 @@ public class HeartiController {
 	
 	
 	
-	@RequestMapping(value = "/livePredictions",method = RequestMethod.GET)
+	@RequestMapping(value = "/api/livePredictions",method = RequestMethod.GET)
 
 	public ResponseEntity<List<LivePrediction>> getLivePrediction()
 			throws SQLException {
