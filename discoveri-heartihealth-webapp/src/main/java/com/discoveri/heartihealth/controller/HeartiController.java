@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.discoveri.heartihealth.business.HeartInfoService;
 import com.discoveri.heartihealth.dto.CardioArrestDetection;
+import com.discoveri.heartihealth.dto.GetTotalPredictionByPeriod;
 import com.discoveri.heartihealth.dto.IntervalPrediction;
 import com.discoveri.heartihealth.dto.LivePrediction;
 import com.discoveri.heartihealth.exceptions.HeartiExceptions;
@@ -143,6 +144,24 @@ public class HeartiController {
 				return new ResponseEntity<List<LivePrediction>>(livePredictions, HttpStatus.NOT_FOUND);
 			} else
 				return new ResponseEntity<List<LivePrediction>>(livePredictions, HttpStatus.OK);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
+	@RequestMapping(value = "/api/getTotalPredictionByPeriod/{interval}",method = RequestMethod.GET)
+
+	public ResponseEntity<List<GetTotalPredictionByPeriod>> getTotalPredictionByPeriod(@PathVariable String interval)
+			throws SQLException {
+		try {
+			List<GetTotalPredictionByPeriod> getTotalPredictionByPeriods = heartInfoService.getTotaPredictionByPeriod(interval);
+			if (getTotalPredictionByPeriods == null) {
+				return new ResponseEntity<List<GetTotalPredictionByPeriod>>(getTotalPredictionByPeriods, HttpStatus.NOT_FOUND);
+			} else
+				return new ResponseEntity<List<GetTotalPredictionByPeriod>>(getTotalPredictionByPeriods, HttpStatus.OK);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

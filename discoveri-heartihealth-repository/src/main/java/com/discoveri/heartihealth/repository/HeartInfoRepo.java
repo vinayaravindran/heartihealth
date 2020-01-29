@@ -3,6 +3,7 @@ package com.discoveri.heartihealth.repository;
 import java.util.List;
 
 import com.discoveri.heartihealth.dto.CardioArrestDetection;
+import com.discoveri.heartihealth.dto.GetTotalPredictionByPeriod;
 import com.discoveri.heartihealth.dto.IntervalPrediction;
 import com.discoveri.heartihealth.dto.LivePrediction;
 import com.discoveri.heartihealth.dto.SymptomPrediction;
@@ -28,4 +29,16 @@ public interface HeartInfoRepo {
 	
 	
 	List<CardioArrestDetection> totalCardioArrestDetection(String memberid);
+	
+	List<GetTotalPredictionByPeriod> getTotaPredictionByPeriod(String interval);
+	
+	List<GetTotalPredictionByPeriod> getTotalPredictionByWeekly();
+	
+	List<GetTotalPredictionByPeriod> getTotalPredictionByMonthly();
+	
+	List<GetTotalPredictionByPeriod> getTotalPredictionByYearly();
+	
+	int getPredictionOfChestPainValueByDay(String memberid, int curDay);
+	int getPredictionOfBloodPressureByDay(String memberid,int curDay);
+	int getPredictionOfCholesterolByDay(String memberid,int curDay);
 }

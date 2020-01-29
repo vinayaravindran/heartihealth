@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.discoveri.heartihealth.dto.CardioArrestDetection;
+import com.discoveri.heartihealth.dto.GetTotalPredictionByPeriod;
 import com.discoveri.heartihealth.dto.IntervalPrediction;
 import com.discoveri.heartihealth.dto.LivePrediction;
 import com.discoveri.heartihealth.exceptions.HeartiExceptions;
@@ -45,6 +46,12 @@ public class HeartInfoServiceImple implements HeartInfoService {
 	public List<LivePrediction> getLivePrediction(String memberid) {
 		// TODO Auto-generated method stub
 		return heartInfoRepo.getLivePrediction(memberid);
+	}
+
+	@Override
+	public List<GetTotalPredictionByPeriod> getTotaPredictionByPeriod(String interval) {
+		// TODO Auto-generated method stub
+		return heartInfoRepo.getTotaPredictionByPeriod(interval);
 	}
 
 

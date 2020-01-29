@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.discoveri.heartihealth.dto.CardioArrestDetection;
+import com.discoveri.heartihealth.dto.GetTotalPredictionByPeriod;
 import com.discoveri.heartihealth.dto.IntervalPrediction;
 import com.discoveri.heartihealth.dto.LivePrediction;
 import com.discoveri.heartihealth.dto.SymptomPrediction;
@@ -276,19 +277,48 @@ public class HeartInfoRepoImpl  implements HeartInfoRepo{
 		// TODO Auto-generated method stub
 		 LivePrediction livePrediction = new LivePrediction();
 		 List<SymptomPrediction> symptomPredictions = new ArrayList<SymptomPrediction>();
+		
+		 int prevDayPredictionValue = 0;
+		 int curDayPredictionValue = 0;
+		 float percentage = 0;
+		 
 		 livePrediction.setSymptomType(symptomType);
 		 
 		 if(symptomType.equalsIgnoreCase("Chest Pain"))
 		 {
 		 symptomPredictions = getChestPainDetection(memberid);
-		 livePrediction.setSymptomPrediction(symptomPredictions);
-		 livePrediction.setTodayPredictionCount(symptomPredictions.size());
+         livePrediction.setSymptomPrediction(symptomPredictions);       
+		 
+		 prevDayPredictionValue = getPredictionOfChestPainValueByDay(memberid, 1);
+		 curDayPredictionValue = getPredictionOfChestPainValueByDay(memberid, 0);
+		 
+		 if(prevDayPredictionValue > 0)
+			 percentage = ((curDayPredictionValue - prevDayPredictionValue)/(prevDayPredictionValue*1.0f)) * 100.0f;
+			else
+			 percentage = curDayPredictionValue * 100.0f; 
+		 
+		 livePrediction.setTodayPredictionSymptomValue(curDayPredictionValue);
+		 livePrediction.setVariation(Math.round(percentage));
+		 livePrediction.setUp(percentage < 0 ? false : true);
+		 
+ 
 		 }
 		 else if(symptomType.equalsIgnoreCase("Blood Pressure"))
 		 {
 			 symptomPredictions = getBloodPressureDetection(memberid);
 			 livePrediction.setSymptomPrediction(symptomPredictions);
-			 livePrediction.setTodayPredictionCount(symptomPredictions.size());
+			 
+			 prevDayPredictionValue = getPredictionOfBloodPressureByDay(memberid, 1);
+			 curDayPredictionValue = getPredictionOfBloodPressureByDay(memberid, 0);
+			 
+			 if(prevDayPredictionValue > 0)
+				 percentage = ((curDayPredictionValue - prevDayPredictionValue)/(prevDayPredictionValue*1.0f)) * 100.0f;
+				else
+				 percentage = curDayPredictionValue * 100.0f; 
+			 
+			 livePrediction.setTodayPredictionSymptomValue(curDayPredictionValue);
+			 livePrediction.setVariation(Math.round(percentage));
+			 livePrediction.setUp(percentage < 0 ? false : true);		
 			 
 		 }
 		 else if(symptomType.equalsIgnoreCase("Cholesterol"))
@@ -296,12 +326,264 @@ public class HeartInfoRepoImpl  implements HeartInfoRepo{
 
 	     symptomPredictions = getCholesterolDetection(memberid);
 		 livePrediction.setSymptomPrediction(symptomPredictions);
-		 livePrediction.setTodayPredictionCount(symptomPredictions.size());
-			 
+		 prevDayPredictionValue = getPredictionOfCholesterolByDay(memberid, 1);
+		 curDayPredictionValue = getPredictionOfCholesterolByDay(memberid, 0);
+		 
+		 if(prevDayPredictionValue > 0)
+			 percentage = ((curDayPredictionValue - prevDayPredictionValue)/(prevDayPredictionValue*1.0f)) * 100.0f;
+			else
+			 percentage = curDayPredictionValue * 100.0f; 
+		 
+		 livePrediction.setTodayPredictionSymptomValue(curDayPredictionValue);
+		 livePrediction.setVariation(Math.round(percentage));
+		 livePrediction.setUp(percentage < 0 ? false : true);
+		 
 		 }
 		 
 	
 		return livePrediction;
 	}
+
+
+	@Override
+	public List<GetTotalPredictionByPeriod> getTotaPredictionByPeriod(String interval) {
+		// TODO Auto-generated method stub
+		
+		if(interval.equalsIgnoreCase("Weekly"))
+			return getTotalPredictionByWeekly();
+		else if(interval.equalsIgnoreCase("Monthly"))
+			return getTotalPredictionByMonthly();
+		else if(interval.equalsIgnoreCase("Yearly"))
+			return getTotalPredictionByYearly();
+		
+		return null;
+		
+	}
+
+
+	@Override
+	public List<GetTotalPredictionByPeriod> getTotalPredictionByWeekly() {
+		// TODO Auto-generated method stub
+		List<GetTotalPredictionByPeriod> totalPredictionByPeriods = new ArrayList<GetTotalPredictionByPeriod>();
+		Connection con=null;
+		int prevPrediction = 1;
+		boolean ignoreFirst = true;
+		float percentage = 0;
+		try {
+			con = DataSource.getConnetion();
+			Statement stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT DAYNAME(c.date),sum(c.cardioarrestdetected) as LastWeek from memberinfo m inner join cardiodiagnosis c on m.member_id = c.memberinfo_member_id inner join diseasedetail d on c.cardio_id = d.cardiodiagnosis_cardio_id WHERE c.date >   DATE_SUB(NOW(), INTERVAL 8 day) group by Date(c.date); ");
+			//emp = new Patient();
+			while (rs.next()) {
+				GetTotalPredictionByPeriod totalPredictionByPeriod =new GetTotalPredictionByPeriod();
+				totalPredictionByPeriod.setInterval(rs.getString(1));
+				totalPredictionByPeriod.setTotalPrediction(rs.getInt(2));
+				
+				if(prevPrediction > 0)
+					 percentage = ((totalPredictionByPeriod.getTotalPrediction() - prevPrediction)/(prevPrediction*1.0f)) * 100.0f;
+					else
+						percentage = totalPredictionByPeriod.getTotalPrediction() * 100;
+				
+				prevPrediction = totalPredictionByPeriod.getTotalPrediction();
+				
+				totalPredictionByPeriod.setVariation(Math.round(percentage));
+				totalPredictionByPeriod.setUp(percentage < 0 ? false : true);
+				
+
+				 if(ignoreFirst)
+	                	ignoreFirst = false;
+	                else
+				totalPredictionByPeriods.add(totalPredictionByPeriod);
+			} 
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return totalPredictionByPeriods;
+	}
+
+
+	@Override
+	public List<GetTotalPredictionByPeriod> getTotalPredictionByMonthly() {
+		// TODO Auto-generated method stub
+		List<GetTotalPredictionByPeriod> totalPredictionByPeriods = new ArrayList<GetTotalPredictionByPeriod>();
+		Connection con=null;
+		int prevPrediction = 0;
+		boolean ignoreFirst = true;
+		float percentage = 0;
+		try {
+			con = DataSource.getConnetion();
+			Statement stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery("select  MONTHNAME(STR_TO_DATE(month(c.date), '%m')) as month ,year(c.date)as year,sum(c.cardioarrestdetected)as predicted from cardiodiagnosis c inner join memberinfo m  on m.member_id = c.memberinfo_member_id inner join diseasedetail d on c.cardio_id = d.cardiodiagnosis_cardio_id where Date(c.date) >  DATE_SUB(NOW(), INTERVAL 12 month) group by month(c.date),year(c.date) order by c.date asc");
+			while (rs.next()) {
+				GetTotalPredictionByPeriod totalPredictionByPeriod =new GetTotalPredictionByPeriod();
+				totalPredictionByPeriod.setInterval(rs.getString(1));
+				totalPredictionByPeriod.setTotalPrediction(rs.getInt(3));
+				
+				if(prevPrediction > 0)
+				 percentage = ((totalPredictionByPeriod.getTotalPrediction() - prevPrediction)/(prevPrediction*1.0f)) * 100.0f;
+				else
+					percentage = totalPredictionByPeriod.getTotalPrediction() * 100;
+					
+				prevPrediction = totalPredictionByPeriod.getTotalPrediction();
+				
+				totalPredictionByPeriod.setVariation(Math.round(percentage));
+				
+				totalPredictionByPeriod.setUp(percentage < 0 ? false : true);
+				
+                if(ignoreFirst)
+                	ignoreFirst = false;
+                else
+				totalPredictionByPeriods.add(totalPredictionByPeriod);
+			} 
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return totalPredictionByPeriods;
+	}
+
+
+	@Override
+	public List<GetTotalPredictionByPeriod> getTotalPredictionByYearly() {
+		// TODO Auto-generated method stub
+		List<GetTotalPredictionByPeriod> totalPredictionByPeriods = new ArrayList<GetTotalPredictionByPeriod>();
+		Connection con=null;
+		int prevPrediction = 1;
+		float percentage = 0;
+		try {
+			con = DataSource.getConnetion();
+			Statement stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery("select year(c.date) as year,sum(c.cardioarrestdetected) as predicted, sum(d.isrecovered) as cured from cardiodiagnosis c  inner join memberinfo m inner join diseasedetail d on m.member_id = c.memberinfo_member_id and c.cardio_id = d.cardiodiagnosis_cardio_id  group by year(c.date);");
+			while (rs.next()) {
+				GetTotalPredictionByPeriod totalPredictionByPeriod =new GetTotalPredictionByPeriod();
+				totalPredictionByPeriod.setInterval(rs.getString(1));
+				totalPredictionByPeriod.setTotalPrediction(rs.getInt(2));
+				
+				
+				if(prevPrediction > 0)
+					 percentage = ((totalPredictionByPeriod.getTotalPrediction() - prevPrediction)/(prevPrediction*1.0f)) * 100.0f;
+					else
+						percentage = totalPredictionByPeriod.getTotalPrediction() * 100;
+						
+				prevPrediction = totalPredictionByPeriod.getTotalPrediction();
+				
+				totalPredictionByPeriod.setVariation(Math.round(percentage));
+				totalPredictionByPeriod.setUp(percentage < 0 ? false : true);
+				
+
+				totalPredictionByPeriods.add(totalPredictionByPeriod);
+			} 
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return totalPredictionByPeriods;
+	}
+
+
+	@Override
+	public int getPredictionOfChestPainValueByDay(String memberid, int curDay) {
+		// TODO Auto-generated method stub
+		 Connection con=null;
+		 int dayPrediction = 0;
+	        try {
+	            con = DataSource.getConnetion();
+	            Statement stmt = con.createStatement();
+	            ResultSet rs;
+	           
+	            if(memberid == null)
+	                 rs = stmt.executeQuery("select sum(s.cp) from symptom s inner join cardiodiagnosis c on s.cardiodiagnosis_cardio_id = c.cardio_id inner join memberinfo m on m.member_id = c.memberinfo_member_id where c.cardioarrestdetected = 1 and  DATE(s.date) = DATE(NOW() - interval "+curDay+" day) ");
+	            else
+	                rs = stmt.executeQuery("select sum(s.cp) from symptom s inner join cardiodiagnosis c on s.cardiodiagnosis_cardio_id = c.cardio_id inner join memberinfo m on m.member_id = c.memberinfo_member_id where c.cardioarrestdetected = 1 and  DATE(s.date) = DATE(NOW() - interval "+curDay+" day) and m.member_id = '"+memberid+"';");
+	         
+	            while (rs.next()) {
+	            	
+	            	dayPrediction = rs.getInt(1);
+	            	
+	            }
+	            con.close();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	        
+	        return dayPrediction;
+	}
+
+
+	@Override
+	public int getPredictionOfBloodPressureByDay(String memberid, int curDay) {
+		// TODO Auto-generated method stub
+		 Connection con=null;
+		 int dayPrediction = 0;
+	        try {
+	            con = DataSource.getConnetion();
+	            Statement stmt = con.createStatement();
+	            ResultSet rs;
+	           
+	            if(memberid == null)
+	                 rs = stmt.executeQuery("select sum(b.bloodpressure) from bloodtest b inner join cardiodiagnosis c \r\n" + 
+	                 		"on b.cardiodiagnosis_cardio_id = c.cardio_id\r\n" + 
+	                 		"inner join memberinfo m \r\n" + 
+	                 		"on m.member_id = c.memberinfo_member_id\r\n" + 
+	                 		"where c.cardioarrestdetected = 1 and  DATE(b.date) = DATE(NOW() - interval "+curDay+" day) ;");
+	            else
+	                rs = stmt.executeQuery("select sum(b.bloodpressure) from bloodtest b inner join cardiodiagnosis c \r\n" + 
+	                 		"on b.cardiodiagnosis_cardio_id = c.cardio_id\r\n" + 
+	                 		"inner join memberinfo m \r\n" + 
+	                 		"on m.member_id = c.memberinfo_member_id\r\n" + 
+	                 		"where c.cardioarrestdetected = 1 and  DATE(b.date) = DATE(NOW() - interval "+curDay+" day) and m.member_id = '"+memberid+"'; ;");
+	            while (rs.next()) {
+	            	
+	            	dayPrediction = rs.getInt(1);
+	            	
+	            }
+	            con.close();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	        
+	        return dayPrediction;
+	}
+
+
+	@Override
+	public int getPredictionOfCholesterolByDay(String memberid, int curDay) {
+		// TODO Auto-generated method stub
+		 Connection con=null;
+		 int dayPrediction = 0;
+	        try {
+	            con = DataSource.getConnetion();
+	            Statement stmt = con.createStatement();
+	            ResultSet rs;
+	           
+	            if(memberid == null)
+	                 rs = stmt.executeQuery("select sum(b.serumcholesterol) from bloodtest b inner join cardiodiagnosis c\r\n" + 
+	                 		"on b.cardiodiagnosis_cardio_id = c.cardio_id\r\n" + 
+	                 		"inner join memberinfo m \r\n" + 
+	                 		"on m.member_id = c.memberinfo_member_id\r\n" + 
+	                 		"where c.cardioarrestdetected = 1 and  DATE(b.date) = DATE(NOW()- interval "+curDay+" day) ;");
+	            else
+	                rs = stmt.executeQuery("select sum(b.serumcholesterol) from bloodtest b inner join cardiodiagnosis c\r\n" + 
+	                 		"on b.cardiodiagnosis_cardio_id = c.cardio_id\r\n" + 
+	                 		"inner join memberinfo m \r\n" + 
+	                 		"on m.member_id = c.memberinfo_member_id\r\n" + 
+	                 		"where c.cardioarrestdetected = 1 and  DATE(b.date) = DATE(NOW()- interval "+curDay+" day) and m.member_id = '"+memberid+"';");
+	         
+	            while (rs.next()) {
+	            	
+	            	dayPrediction = rs.getInt(1);
+	            	
+	            }
+	            con.close();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	        
+	        return dayPrediction;
+	}
+
+
+	
 	
 }
